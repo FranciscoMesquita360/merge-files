@@ -333,7 +333,7 @@ def merge_project_files(directory, output_file, config):
 
 
 if __name__ == "__main__":
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    current_dir = os.getcwd()
     dir_name = os.path.basename(current_dir)
     output_name = f"merged_output_{dir_name}.txt"
     output_path = os.path.join(current_dir, output_name)
