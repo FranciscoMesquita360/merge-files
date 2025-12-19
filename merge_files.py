@@ -10,6 +10,7 @@ Tool to merge multiple project code/configuration files into a single file.
 import os
 import sys
 import json
+import argparse
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ⚙️ DEFAULT CONFIGURATION (FALLBACK)
@@ -57,6 +58,28 @@ CONFIG_FILENAME = "merge_config.json"
 # ═══════════════════════════════════════════════════════════════════════════
 # 🔧 HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════
+
+def generate_config_file(output_path=None):
+    """Generates a merge_config.json file with default settings."""
+    if output_path is None:
+        output_path = os.path.join(os.getcwd(), CONFIG_FILENAME)
+    
+    if os.path.exists(output_path):
+        response = input(f"⚠️  File '{CONFIG_FILENAME}' already exists. Overwrite? (y/N): ")
+        if response.lower() != 'y':
+            print("❌ Operation cancelled.")
+            return False
+    
+    try:
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(DEFAULT_CONFIG, f, indent=4, ensure_ascii=False)
+        
+        print(f"✅ Configuration file generated successfully: {CONFIG_FILENAME}")
+        print(f"📝 Edit this file to customize your merge settings.")
+        return True
+    except Exception as e:
+        print(f"❌ Error generating configuration file: {e}")
+        return False
 
 def load_configuration(current_dir):
     """Loads config from JSON or returns default."""
@@ -332,7 +355,40 @@ def merge_project_files(directory, output_file, config):
     print(f"📊 Size: {os.path.getsize(output_file) / 1024:.2f} KB")
 
 
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description='🔗 Merge Project Files - Combine multiple project files into a single output',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python merge_files.py                    # Run merge with current settings
+  python merge_files.py --generate-config  # Generate merge_config.json template
+  python merge_files.py -g                 # Short form to generate config
+        """
+    )
+    
+    parser.add_argument(
+        '-g', '--generate-config',
+        action='store_true',
+        help='Generate a merge_config.json file with default settings'
+    )
+    
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_arguments()
+    
+    # If user wants to generate config file
+    if args.generate_config:
+        print("=" * 70)
+        print("⚙️  GENERATING CONFIGURATION FILE")
+        print("=" * 70 + "\n")
+        generate_config_file()
+        sys.exit(0)
+    
+    # Normal merge operation
     current_dir = os.getcwd()
     dir_name = os.path.basename(current_dir)
     output_name = f"merged_output_{dir_name}.txt"
@@ -340,7 +396,7 @@ if __name__ == "__main__":
     
     try:
         print("=" * 70)
-        print("🔗 MERGE PROJECT FILES v3.0.0")
+        print("🔗 MERGE PROJECT FILES v3.1.0")
         print("=" * 70 + "\n")
 
         # 1. Load configuration

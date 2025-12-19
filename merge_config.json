@@ -1,33 +1,85 @@
 {
-  "project_description": "Este é meu projeto",
-  "mandatory_dirs": [],
-  "excluded_dirs": [
-    "target", "target-app", ".git", ".vscode", "__pycache__", 
-    "node_modules", "build", ".venv", "windows-schema", "gen"
-  ],
-  "excluded_file_prefixes": [
-    "Insomnia", "log", "merge_files", "merged_output", 
-    "Cargo.lock", "package-lock", "data", "mod", 
-    "mock_bundle_registry", ".git", ".DS_Store"
-  ],
-  "just_file_prefixes": [],
-  "search_keywords": [],
-  "included_extensions": [
-    ".rs", ".ts", ".tsx", ".css", ".json", ".toml", 
-    ".html", ".py", ".txt", ".proto", ".lua", ".js"
-  ],
-  "tree_settings": {
+    "mandatory_dirs": [],
     "excluded_dirs": [
-      "target", ".git", ".vscode", "__pycache__", 
-      "node_modules", "build", ".venv", "windows-schema", "gen", "icons", "data"
+        "target",
+        "target-app",
+        ".git",
+        ".vscode",
+        "__pycache__",
+        "node_modules",
+        "build",
+        ".venv",
+        "windows-schema",
+        "gen"
     ],
-    "excluded_prefixes": [
-      "gitignore", "package-lock", "merge_files", "merged_output",
-      "README", "tauri_studio_structure", "Cargo.lock", ".git"
+    "excluded_file_prefixes": [
+        "Insomnia",
+        "log",
+        "merge_files",
+        "merged_output",
+        "Cargo.lock",
+        "package-lock",
+        "data",
+        "mod",
+        "mock_bundle_registry",
+        ".git",
+        ".DS_Store"
     ],
-    "just_prefixes": [],
+    "just_file_prefixes": [],
+    "search_keywords": [],
     "included_extensions": [
-      ".rs", ".ts", ".tsx", ".css", ".json", ".toml", ".html", ".py", ".txt", ".proto", ".js"
-    ]
-  }
+        ".rs",
+        ".ts",
+        ".tsx",
+        ".css",
+        ".json",
+        ".toml",
+        ".html",
+        ".py",
+        ".txt",
+        ".proto",
+        ".lua",
+        ".js"
+    ],
+    "project_description": "Default project description (Create merge_config.json to change).",
+    "inline_comment_symbol": "//",
+    "tree_settings": {
+        "excluded_dirs": [
+            "target",
+            ".git",
+            ".vscode",
+            "__pycache__",
+            "node_modules",
+            "build",
+            ".venv",
+            "windows-schema",
+            "gen",
+            "icons",
+            "data"
+        ],
+        "excluded_prefixes": [
+            "gitignore",
+            "package-lock",
+            "merge_files",
+            "merged_output",
+            "README",
+            "tauri_studio_structure",
+            "Cargo.lock",
+            ".git"
+        ],
+        "just_prefixes": [],
+        "included_extensions": [
+            ".rs",
+            ".ts",
+            ".tsx",
+            ".css",
+            ".json",
+            ".toml",
+            ".html",
+            ".py",
+            ".txt",
+            ".proto",
+            ".js"
+        ]
+    }
 }
