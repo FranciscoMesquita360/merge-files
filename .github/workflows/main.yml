@@ -10,13 +10,9 @@ jobs:
     name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false # 👈 Importante para não cancelar tudo se um falhar
       matrix:
         os: [ubuntu-latest, windows-latest]
-        include:
-          - os: ubuntu-latest
-            artifact_name: merge-linux
-          - os: windows-latest
-            artifact_name: merge-windows.exe
 
     steps:
       - uses: actions/checkout@v3
@@ -24,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11' # Versão estável e compatível
 
       - name: Install dependencies
         run: |
@@ -32,14 +28,16 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
+        # Aqui usamos o comando igual ao teu, mas adaptando o nome por SO
         run: |
-          pyinstaller --onefile --name ${{ matrix.artifact_name }} merge_files.py
+          python -m PyInstaller --onefile --name mergefiles --console merge_files.py
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.artifact_name }}
+          # No Windows o PyInstaller adiciona .exe automaticamente
+          file: ${{ matrix.os == 'windows-latest' && 'dist/mergefiles.exe' || 'dist/mergefiles' }}
+          asset_name: ${{ matrix.os == 'windows-latest' && 'merge-windows.exe' || 'merge-linux' }}
           tag: ${{ github.ref }}
           overwrite: true
