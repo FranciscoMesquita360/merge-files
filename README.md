@@ -16,14 +16,14 @@ A CLI tool to merge multiple files into a single text file.
 
 No Python? No problem. Run the command for your system:
 
-### Linux / macOS
+### Linux
 ```bash
-curl -fsSL [https://raw.githubusercontent.com/FranciscoMesquita360/merge-files/main/install.sh](https://raw.githubusercontent.com/FranciscoMesquita360/merge-files/main/install.sh) | bash
+curl -fsSL https://raw.githubusercontent.com/FranciscoMesquita360/merge-files/main/install.sh | bash
 ```
 
 ### Windows (PowerShell)
 ```powershell
-iwr [https://raw.githubusercontent.com/FranciscoMesquita360/merge-files/main/install.ps1](https://raw.githubusercontent.com/FranciscoMesquita360/merge-files/main/install.ps1) | iex
+iwr https://raw.githubusercontent.com/FranciscoMesquita360/merge-files/main/install.ps1 | iex 
 ```
 
 ---
