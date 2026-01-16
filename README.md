@@ -1,22 +1,21 @@
-# 🔗 Merge
+# 🔗 Merge (Markdown Edition)
 
-A CLI tool to merge multiple files into a single text file.
+A CLI tool to merge multiple files into a single file.md
 
 ## 📋 Features
 
 - ✅ **One-liner installation** for Windows, Linux, and macOS
-- ✅ **Single Binary**: No Python installation required for end-users
+- ✅ **Markdown Output**: Files are wrapped in code blocks with syntax highlighting (`.rs`, `.py`, `.ts`, etc.)
 - ✅ **Auto-generate configuration** via `merge --generate-config`
 - ✅ **Recursive traversal** with smart filtering
 - ✅ Filter by **extension**, **prefix**, or **keywords**
 - ✅ **Priority Folders**: Force include critical directories
-- ✅ **Visual Tree**: Generates a directory structure map at the end of the file
 
 ## 🚀 Quick Install
 
 No Python? No problem. Run the command for your system:
 
-### Linux
+### Linux / macOS
 ```bash
 curl -fsSL https://raw.githubusercontent.com/FranciscoMesquita360/merge-files/main/install.sh | bash
 ```
@@ -42,7 +41,7 @@ Simply type the command in your project root:
 ```bash
 merge
 ```
-**Done!** A file named `merged_output_<folder_name>.txt` will be created.
+**Done!** A file named `merged_context_<folder_name>.md` will be created.
 
 ---
 
@@ -68,7 +67,7 @@ The `merge_config.json` allows full control over the process:
 | `included_extensions` | Only merge files with these extensions (.rs, .py, .ts) |
 | `search_keywords` | Only merge files containing these specific words |
 | `project_description` | Custom text header for the output file |
-| `tree_settings` | Control how the directory tree is drawn |
+| `tree_settings` | Control how the directory tree is drawn (can differ from file selection) |
 
 ---
 
@@ -101,23 +100,28 @@ The `merge_config.json` allows full control over the process:
 }
 ```
 
-### 📄 Documentation Only
-```json
-{
-  "project_description": "Project Documentation Audit",
-  "included_extensions": [".md", ".txt", ".yaml", "Dockerfile"],
-  "excluded_dirs": ["src", "lib", "node_modules"]
-}
-```
-
 ---
 
 ## 📂 Output Format
 
-The generated file is structured as follows:
-1. **Header**: Project description and active filters.
-2. **Files**: Each file starts with a clear separator `// ==================== [path/to/file]`.
-3. **Directory Tree**: A visual representation of the scanned project structure.
+The generated `.md` file is structured to give LLMs the best possible context:
+
+1. **Header**: Project description.
+2. **Directory Tree**: A visual map of the project structure.
+   ```text
+   my-project/
+   ├── src/
+   │   ├── main.rs
+   │   └── utils.rs
+   └── Cargo.toml
+   ```
+3. **Files**: Each file is clearly separated with Markdown syntax highlighting:
+   ```rust
+   // ## File: src/main.rs
+   fn main() {
+       println!("Hello World");
+   }
+   ```
 
 ## 💡 Pro Tips
 
@@ -126,7 +130,7 @@ The generated file is structured as follows:
 3. **Tree Mapping**: Even if you don't merge all files, use `tree_settings` to let the AI see your architecture.
 
 ## 🤝 Contributing
-Contributions are welcome! Feel free to open issues or PRs on [GitHub](https://github.com/FranciscoMesquita360/merge-files).
+Contributions are welcome! Feel free to open issues or PRs.
 
 ## 📄 License
 MIT - Free to use and modify.

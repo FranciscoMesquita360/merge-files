@@ -3,7 +3,7 @@
 """
 🔗 MERGE PROJECT FILES
 ================================================================================
-Tool to merge multiple project code/configuration files into a single file.
+A CLI tool to merge multiple files into a single file.md
 ================================================================================
 """
 
@@ -15,28 +15,24 @@ import argparse
 # ═══════════════════════════════════════════════════════════════════════════
 # ⚙️ DEFAULT CONFIGURATION (FALLBACK)
 # ═══════════════════════════════════════════════════════════════════════════
-# These settings will only be used if the 'merge_config.json' file
-# is NOT found in the same directory.
 
 DEFAULT_CONFIG = {
     "mandatory_dirs": [],
     "excluded_dirs": [
         'target', 'target-app', '.git', '.vscode', '__pycache__', 
-        'node_modules', 'build', '.venv', 'windows-schema', 'gen'
+        'node_modules', 'build', '.venv', 'windows-schema', 'gen', 'dist', 'coverage'
     ],
     "excluded_file_prefixes": [
-        'Insomnia', 'log', 'merge_files', 'merged_output', 
-        'Cargo.lock', 'package-lock', 'data', 'mod', 
-        'mock_bundle_registry', '.git', '.DS_Store'
+     'merged_output','Cargo.lock', 'package-lock', 'yarn.lock', 'pnpm-lock', 
+        'data', 'mock_bundle_registry', '.git', '.DS_Store','readme','README'
     ],
     "just_file_prefixes": [],
     "search_keywords": [],
     "included_extensions": [
-        '.rs', '.ts', '.tsx', '.css', '.json', '.toml', 
-        '.html', '.py', '.txt', '.proto', '.lua', '.js'
+        '.rs', '.ts', '.tsx', '.css', '.scss', '.json', '.toml', '.yaml', '.yml',
+        '.html', '.py', '.txt', '.proto', '.lua', '.js', '.jsx','.sql', '.sh','.ps1'
     ],
-    "project_description": "Default project description (Create merge_config.json to change).",
-    "inline_comment_symbol": "//",
+    "project_description": "Default project description",
     "tree_settings": {
         "excluded_dirs": [
             'target', '.git', '.vscode', '__pycache__', 
@@ -48,7 +44,8 @@ DEFAULT_CONFIG = {
         ],
         "just_prefixes": [],
         "included_extensions": [
-             '.rs', '.ts', '.tsx', '.css', '.json', '.toml', '.html', '.py', '.txt', '.proto', '.js'
+              '.rs', '.ts', '.tsx', '.css', '.scss', '.json', '.toml', '.yaml', '.yml',
+        '.html', '.py', '.txt', '.proto', '.lua', '.js', '.jsx', '.md', '.sql', '.sh','.ps1'
         ]
     }
 }
@@ -94,11 +91,9 @@ def load_configuration(current_dir):
             print(f"📄 Loading configuration from: {CONFIG_FILENAME}")
             user_config = json.load(f)
             
-            # Simple merge to ensure keys missing in JSON pick up the default
             final_config = DEFAULT_CONFIG.copy()
             final_config.update(user_config)
             
-            # Specific merge for nested dictionary 'tree_settings'
             if 'tree_settings' in user_config:
                 final_config['tree_settings'] = DEFAULT_CONFIG['tree_settings'].copy()
                 final_config['tree_settings'].update(user_config['tree_settings'])
@@ -110,28 +105,20 @@ def load_configuration(current_dir):
         return DEFAULT_CONFIG
 
 def _parse_prefixes(prefixes_input):
-    """Converts different input formats (list or string) to a set."""
-    if not prefixes_input:
-        return None
-    
+    if not prefixes_input: return None
     if isinstance(prefixes_input, list):
-        # If coming from JSON as a list
         return set([os.path.normpath(p.strip()) for p in prefixes_input if p.strip()])
     elif isinstance(prefixes_input, str):
-        # If coming as a comma-separated string
         prefixes = [os.path.normpath(p.strip()) for p in prefixes_input.split(',') if p.strip()]
         return set(prefixes) if prefixes else None
     else:
         return set([os.path.normpath(p) for p in prefixes_input]) if prefixes_input else None
 
 def _ensure_tuple(data):
-    """Ensures JSON lists become tuples for startswith/endswith checks."""
-    if isinstance(data, list):
-        return tuple(data)
+    if isinstance(data, list): return tuple(data)
     return data if data else ()
 
 def _file_contains_keywords(file_path, keywords_set):
-    """Checks if the file contains at least one of the keywords."""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read().lower()
@@ -140,7 +127,6 @@ def _file_contains_keywords(file_path, keywords_set):
         return False
 
 def _get_keywords_in_file(file_path, keywords_set):
-    """Returns the list of keywords found in the file."""
     found_keywords = []
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -152,6 +138,42 @@ def _get_keywords_in_file(file_path, keywords_set):
         pass
     return sorted(found_keywords)
 
+def _get_markdown_language(filename):
+    """Maps file extension to Markdown language identifier for syntax highlighting."""
+    ext = os.path.splitext(filename)[1].lower()
+    mapping = {
+        '.py': 'python',
+        '.rs': 'rust',
+        '.js': 'javascript', '.jsx': 'javascript',
+        '.ts': 'typescript', '.tsx': 'typescript',
+        '.html': 'html',
+        '.css': 'css', '.scss': 'scss',
+        '.json': 'json',
+        '.md': 'markdown',
+        '.yaml': 'yaml', '.yml': 'yaml',
+        '.toml': 'toml',
+        '.sh': 'bash', '.zsh': 'bash', '.bat': 'batch',
+        '.lua': 'lua',
+        '.c': 'c', '.cpp': 'cpp', '.h': 'cpp',
+        '.sql': 'sql',
+        '.java': 'java',
+        '.go': 'go',
+        '.rb': 'ruby',
+        '.php': 'php',
+        '.xml': 'xml',
+        '.proto': 'protobuf',
+        '.dockerfile': 'dockerfile',
+        '.txt': 'text'
+    }
+    # Special case for files like 'Dockerfile' with no extension
+    if filename.lower() == 'dockerfile': return 'dockerfile'
+    if filename.lower() == 'makefile': return 'makefile'
+    
+    return mapping.get(ext, '')
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 🚀 MAIN MERGE FUNCTION
+# ═══════════════════════════════════════════════════════════════════════════
 
 def merge_project_files(directory, output_file, config):
     output_filename = os.path.basename(output_file)
@@ -160,34 +182,29 @@ def merge_project_files(directory, output_file, config):
     print(f"🔍 Searching for files in: {directory}")
     print(f"📝 Output will be saved to: {output_filename}\n")
 
-    # Extracting config to local variables for readability
+    # Config extraction
     mandatory_dirs = _parse_prefixes(config.get('mandatory_dirs'))
     excluded_dirs = set(config.get('excluded_dirs', []))
     excluded_prefixes = _ensure_tuple(config.get('excluded_file_prefixes'))
     just_prefixes_set = _parse_prefixes(config.get('just_file_prefixes'))
     keywords_set = _parse_prefixes(config.get('search_keywords'))
     included_extensions = _ensure_tuple(config.get('included_extensions'))
-    
-    inline_comment = config.get('inline_comment_symbol', '//')
     proj_desc = config.get('project_description', '')
 
     # ─────────────────────────────────────────────────────────────────────
-    # PHASE 1: Collecting files to merge
+    # PHASE 1: Collecting files
     # ─────────────────────────────────────────────────────────────────────
     found_files = []
 
     if mandatory_dirs:
         print(f"🚨 Mandatory Directories (Priority): {', '.join(sorted(mandatory_dirs))}")
-
     if keywords_set:
         print(f"🔍 Keyword filter active: {', '.join(sorted(keywords_set))}")
     
     skipped_by_keywords = 0
     
     for root, dirs, files in os.walk(directory, topdown=True):
-        # Filters default excluded directories
         dirs[:] = [d for d in dirs if d not in excluded_dirs]
-        
         root_normalized = os.path.normpath(root)
         
         is_mandatory_path = False
@@ -198,39 +215,26 @@ def merge_project_files(directory, output_file, config):
                     break
 
         for file in files:
-            # ✗ Always exclude: current script, output file, and config json
             if file == script_filename or file == output_filename or file == CONFIG_FILENAME:
                 continue
             
             full_path = os.path.join(root, file)
 
-            # 🚨 PRIORITY CHECK: If it is a mandatory directory
+            # Priority Check
             if is_mandatory_path:
-                if not file.startswith(('.DS_Store', '.git')): 
-                    found_files.append(full_path)
-                    continue 
+                found_files.append(full_path)
+                continue 
 
-            # --- NORMAL FILTERS ---
-
-            # ✗ Exclude: prefixes
-            if file.startswith(excluded_prefixes):
-                continue
+            # Normal Filters
+            if file.startswith(excluded_prefixes): continue
+            if not file.endswith(included_extensions): continue
+            if just_prefixes_set and not any(file.startswith(prefix) for prefix in just_prefixes_set): continue
             
-            # ✗ Exclude: extensions
-            if not file.endswith(included_extensions):
-                continue
-            
-            # ✗ Exclude: positive prefix filter
-            if just_prefixes_set and not any(file.startswith(prefix) for prefix in just_prefixes_set):
-                continue
-            
-            # ✗ Exclude: keyword filter
             if keywords_set:
                 if not _file_contains_keywords(full_path, keywords_set):
                     skipped_by_keywords += 1
                     continue
             
-            # ✅ File passed
             found_files.append(full_path)
     
     found_files.sort()
@@ -241,47 +245,25 @@ def merge_project_files(directory, output_file, config):
     print()
 
     # ─────────────────────────────────────────────────────────────────────
-    # PHASE 2: Writing output file
+    # PHASE 2: Writing output file (MARKDOWN FORMAT)
     # ─────────────────────────────────────────────────────────────────────
     with open(output_file, 'w', encoding='utf-8') as outfile:
         
+        # 1. Project Header
         if proj_desc:
-            outfile.write(inline_comment + " PROJECT DESCRIPTION\n")
-            outfile.write(inline_comment + "-" * 50 + "\n")
-            for line in proj_desc.strip().splitlines():
-                outfile.write(inline_comment + " " + line + "\n")
-            outfile.write("\n" + inline_comment + "=" * 50 + "\n\n\n")
-        
-        if keywords_set:
-            outfile.write(inline_comment + " KEYWORD FILTER ACTIVE\n")
-            outfile.write(inline_comment + "-" * 50 + "\n")
-            outfile.write(inline_comment + " Searching for: " + ", ".join(sorted(keywords_set)) + "\n")
-            outfile.write("\n" + inline_comment + "=" * 50 + "\n\n\n")
-
-        for file_path in found_files:
-            relative_path = os.path.relpath(file_path, directory)
-            
-            outfile.write(inline_comment + "=" * 50 + "\n")
-            outfile.write(inline_comment + relative_path + "\n")
-            
-            try:
-                with open(file_path, 'r', encoding='utf-8') as infile:
-                    outfile.write(infile.read())
-            except Exception as e:
-                outfile.write(inline_comment + f" [ERROR READING FILE (Binary?): {e}]\n")
-            
-            outfile.write("\n\n")
+            outfile.write(f"# PROJECT DESCRIPTION\n\n")
+            outfile.write(f"{proj_desc.strip()}\n\n")
+            outfile.write("---\n\n")
 
         # ─────────────────────────────────────────────────────────────────
-        # PHASE 3: Directory Tree
+        # 2. Directory Tree (MOVED HERE)
         # ─────────────────────────────────────────────────────────────────
-        outfile.write(inline_comment + " PROJECT DIRECTORY TREE\n")
-        outfile.write(inline_comment + "-" * 50 + "\n")
+        outfile.write("# PROJECT DIRECTORY TREE\n\n")
+        outfile.write("```text\n") # Start text block for tree
         
         tree = {}
         files_keywords_map = {}
         
-        # Tree settings
         tree_conf = config.get('tree_settings', {})
         excl_dirs_tree = set(tree_conf.get('excluded_dirs', []))
         excl_prefixes_tree = _ensure_tuple(tree_conf.get('excluded_prefixes'))
@@ -305,13 +287,9 @@ def merge_project_files(directory, output_file, config):
                 if file == script_filename or file == output_filename or file == CONFIG_FILENAME:
                     continue
                 
-                # Tree filters
-                if file.startswith(excl_prefixes_tree):
-                    continue
-                if incl_ext_tree and not file.endswith(incl_ext_tree):
-                    continue
-                if just_prefixes_tree and not any(file.startswith(prefix) for prefix in just_prefixes_tree):
-                    continue
+                if file.startswith(excl_prefixes_tree): continue
+                if incl_ext_tree and not file.endswith(incl_ext_tree): continue
+                if just_prefixes_tree and not any(file.startswith(prefix) for prefix in just_prefixes_tree): continue
                 
                 current_node[file] = None
                 
@@ -332,55 +310,67 @@ def merge_project_files(directory, output_file, config):
                 
                 if not is_directory:
                     file_path = os.path.join(current_path, key) if current_path else key
+                    marker = ""
                     if file_path in files_keywords_map:
                         keywords_str = ",".join(files_keywords_map[file_path])
-                        marker = f"  ({keywords_str})"
-                    else:
-                        marker = ""
+                        marker = f"  (* {keywords_str})"
                     
-                    outfile.write(inline_comment + " " + prefix + connector + key + marker + "\n")
+                    outfile.write(f"{prefix}{connector}{key}{marker}\n")
                 else:
-                    outfile.write(inline_comment + " " + prefix + connector + key + "/\n")
+                    outfile.write(f"{prefix}{connector}{key}/\n")
                     if node[key] != {}:
                         next_prefix = prefix + ("    " if is_last else "│   ")
                         next_path = os.path.join(current_path, key) if current_path else key
                         print_tree(node[key], next_prefix, next_path)
 
         root_name = os.path.basename(os.path.abspath(directory))
-        outfile.write(inline_comment + " " + root_name + "/\n")
+        outfile.write(f"{root_name}/\n")
         print_tree(tree, "", "")
-        outfile.write("\n" + inline_comment + "=" * 50 + "\n\n")
-    
+        outfile.write("```\n\n") # End text block
+        outfile.write("---\n\n")
+        
+        # 3. Keyword Info (if exists)
+        if keywords_set:
+            outfile.write("> ⚠️ **KEYWORD FILTER ACTIVE**\n")
+            outfile.write(f"> Searching for: `{', '.join(sorted(keywords_set))}`\n\n")
+            outfile.write("---\n\n")
+
+        # 4. Files Content
+        for file_path in found_files:
+            relative_path = os.path.relpath(file_path, directory)
+            filename = os.path.basename(file_path)
+            lang = _get_markdown_language(filename)
+            
+            outfile.write(f"## File: `{relative_path}`\n\n")
+            
+            try:
+                with open(file_path, 'r', encoding='utf-8') as infile:
+                    content = infile.read()
+                    
+                    outfile.write(f"```{lang}\n")
+                    outfile.write(content)
+                    if not content.endswith('\n'):
+                        outfile.write("\n")
+                    outfile.write("```\n\n")
+            except Exception as e:
+                outfile.write(f"> ❌ [ERROR READING FILE]: {e}\n\n")
+
     print(f"✅ File generated successfully: {output_filename}")
     print(f"📊 Size: {os.path.getsize(output_file) / 1024:.2f} KB")
 
 
 def parse_arguments():
-    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description='🔗 Merge Project Files - Combine multiple project files into a single output',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  python merge_files.py                    # Run merge with current settings
-  python merge_files.py --generate-config  # Generate merge_config.json template
-  python merge_files.py -g                 # Short form to generate config
-        """
+        description='🔗 Merge Project Files (Markdown) - Combine project files for LLM Context',
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    
-    parser.add_argument(
-        '-g', '--generate-config',
-        action='store_true',
-        help='Generate a merge_config.json file with default settings'
-    )
-    
+    parser.add_argument('-g', '--generate-config', action='store_true', help='Generate default config')
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_arguments()
     
-    # If user wants to generate config file
     if args.generate_config:
         print("=" * 70)
         print("⚙️  GENERATING CONFIGURATION FILE")
@@ -388,25 +378,22 @@ if __name__ == "__main__":
         generate_config_file()
         sys.exit(0)
     
-    # Normal merge operation
     current_dir = os.getcwd()
     dir_name = os.path.basename(current_dir)
-    output_name = f"merged_output_{dir_name}.txt"
+    output_name = f"merged_output_{dir_name}.md"
     output_path = os.path.join(current_dir, output_name)
     
     try:
         print("=" * 70)
-        print("🔗 MERGE PROJECT FILES v3.1.0")
+        print("🔗 MERGE PROJECT FILES")
         print("=" * 70 + "\n")
 
-        # 1. Load configuration
         config = load_configuration(current_dir)
 
         if os.path.exists(output_path):
             print(f"🧹 Removing previous output file: {output_name}")
             os.remove(output_path)
         
-        # 2. Execute merge passing config object
         merge_project_files(current_dir, output_path, config)
         
         print("\n" + "=" * 70)
