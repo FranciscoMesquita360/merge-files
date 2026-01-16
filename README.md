@@ -41,7 +41,7 @@ Simply type the command in your project root:
 ```bash
 merge
 ```
-**Done!** A file named `merged_context_<folder_name>.md` will be created.
+**Done!** A file named `merged_output_<folder_name>.md` will be created.
 
 ---
 
