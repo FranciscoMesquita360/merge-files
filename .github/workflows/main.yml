@@ -10,7 +10,7 @@ jobs:
     name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false # 👈 Importante para não cancelar tudo se um falhar
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
 
@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11' # Versão estável e compatível
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -28,7 +28,7 @@ jobs:
           pip install pyinstaller
 
       - name: Build with PyInstaller
-        # Aqui usamos o comando igual ao teu, mas adaptando o nome por SO
+
         run: |
           python -m PyInstaller --onefile --name mergefiles --console merge_files.py
 
@@ -36,7 +36,6 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          # No Windows o PyInstaller adiciona .exe automaticamente
           file: ${{ matrix.os == 'windows-latest' && 'dist/mergefiles.exe' || 'dist/mergefiles' }}
           asset_name: ${{ matrix.os == 'windows-latest' && 'merge-windows.exe' || 'merge-linux' }}
           tag: ${{ github.ref }}
