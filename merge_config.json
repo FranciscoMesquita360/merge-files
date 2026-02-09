@@ -28,6 +28,7 @@
         "README"
     ],
     "just_file_prefixes": [],
+    "just_file_contain": [],
     "search_keywords": [],
     "included_extensions": [
         ".rs",
@@ -76,6 +77,7 @@
             ".git"
         ],
         "just_prefixes": [],
+        "just_file_contain": [],
         "included_extensions": [
             ".rs",
             ".ts",

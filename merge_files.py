@@ -27,6 +27,7 @@ DEFAULT_CONFIG = {
         'data', 'mock_bundle_registry', '.git', '.DS_Store','readme','README'
     ],
     "just_file_prefixes": [],
+    "just_file_contain": [],
     "search_keywords": [],
     "included_extensions": [
         '.rs', '.ts', '.tsx', '.css', '.scss', '.json', '.toml', '.yaml', '.yml',
@@ -43,6 +44,7 @@ DEFAULT_CONFIG = {
             'README', 'tauri_studio_structure', 'Cargo.lock', '.git'
         ],
         "just_prefixes": [],
+        "just_file_contain": [],
         "included_extensions": [
               '.rs', '.ts', '.tsx', '.css', '.scss', '.json', '.toml', '.yaml', '.yml',
         '.html', '.py', '.txt', '.proto', '.lua', '.js', '.jsx', '.md', '.sql', '.sh','.ps1'
@@ -187,6 +189,7 @@ def merge_project_files(directory, output_file, config):
     excluded_dirs = set(config.get('excluded_dirs', []))
     excluded_prefixes = _ensure_tuple(config.get('excluded_file_prefixes'))
     just_prefixes_set = _parse_prefixes(config.get('just_file_prefixes'))
+    just_contain_set = _parse_prefixes(config.get('just_file_contain'))
     keywords_set = _parse_prefixes(config.get('search_keywords'))
     included_extensions = _ensure_tuple(config.get('included_extensions'))
     proj_desc = config.get('project_description', '')
@@ -229,6 +232,7 @@ def merge_project_files(directory, output_file, config):
             if file.startswith(excluded_prefixes): continue
             if not file.endswith(included_extensions): continue
             if just_prefixes_set and not any(file.startswith(prefix) for prefix in just_prefixes_set): continue
+            if just_contain_set and not any(sub.lower() in file.lower() for sub in just_contain_set): continue
             
             if keywords_set:
                 if not _file_contains_keywords(full_path, keywords_set):
@@ -256,7 +260,7 @@ def merge_project_files(directory, output_file, config):
             outfile.write("---\n\n")
 
         # ─────────────────────────────────────────────────────────────────
-        # 2. Directory Tree (MOVED HERE)
+        # 2. Directory Tree
         # ─────────────────────────────────────────────────────────────────
         outfile.write("# PROJECT DIRECTORY TREE\n\n")
         outfile.write("```text\n") # Start text block for tree
@@ -268,6 +272,7 @@ def merge_project_files(directory, output_file, config):
         excl_dirs_tree = set(tree_conf.get('excluded_dirs', []))
         excl_prefixes_tree = _ensure_tuple(tree_conf.get('excluded_prefixes'))
         just_prefixes_tree = _parse_prefixes(tree_conf.get('just_prefixes'))
+        just_contain_tree = _parse_prefixes(tree_conf.get('just_file_contain'))
         incl_ext_tree = _ensure_tuple(tree_conf.get('included_extensions'))
 
         for root, dirs, files in os.walk(directory, topdown=True):
@@ -290,6 +295,7 @@ def merge_project_files(directory, output_file, config):
                 if file.startswith(excl_prefixes_tree): continue
                 if incl_ext_tree and not file.endswith(incl_ext_tree): continue
                 if just_prefixes_tree and not any(file.startswith(prefix) for prefix in just_prefixes_tree): continue
+                if just_contain_tree and not any(sub.lower() in file.lower() for sub in just_contain_tree): continue
                 
                 current_node[file] = None
                 
@@ -302,6 +308,9 @@ def merge_project_files(directory, output_file, config):
 
         def print_tree(node, prefix, current_path=""):
             keys = sorted(node.keys())
+            # Cleanup empty directory nodes after filtering
+            keys = [k for k in keys if node[k] is not None or (node[k] is None)]
+            
             for i, key in enumerate(keys):
                 is_last = i == (len(keys) - 1)
                 connector = "└── " if is_last else "├── "
@@ -317,6 +326,12 @@ def merge_project_files(directory, output_file, config):
                     
                     outfile.write(f"{prefix}{connector}{key}{marker}\n")
                 else:
+                    # Only print directory if it's not empty after filters or if we don't care
+                    # For simplicity, we print it, but we can recurse
+                    if node[key] == {} and (just_prefixes_tree or just_contain_tree):
+                        # Skip empty folders when filtering files
+                        continue
+                        
                     outfile.write(f"{prefix}{connector}{key}/\n")
                     if node[key] != {}:
                         next_prefix = prefix + ("    " if is_last else "│   ")
