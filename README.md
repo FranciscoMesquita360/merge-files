@@ -50,11 +50,11 @@ merge
 | Option | Short | Description |
 |--------|-------|-------------|
 | --generate-config | -g | Generate merge_config.json template
-merge -g                    # Short form for config generation
-merge --help                # Show help message
-merge -c debug_config.json  # Specific configuration
-merge -t                    # File tagging
-```
+merge | -g |                    # Short form for config generation
+merge |--help|                # Show help message
+merge |-c| debug_config.json  # Specific configuration
+merge |-t|                  # File tagging
+
 
 ---
 
