@@ -54,6 +54,30 @@ DEFAULT_CONFIG = {
 
 CONFIG_FILENAME = "merge_config.json"
 
+COMMENT_MAP = {
+    '.py': '# {}',
+    '.rs': '// {}',
+    '.js': '// {}',
+    '.jsx': '// {}',
+    '.ts': '// {}',
+    '.tsx': '// {}',
+    '.lua': '-- {}',
+    '.sql': '-- {}',
+    '.sh': '# {}',
+    '.ps1': '# {}',
+    '.yaml': '# {}',
+    '.yml': '# {}',
+    '.toml': '# {}',
+    '.css': '/* {} */',
+    '.scss': '/* {} */',
+    '.proto': '// {}',
+    '.go': '// {}',
+    '.c': '// {}',
+    '.cpp': '// {}',
+    '.h': '// {}',
+    '.java': '// {}',
+}
+
 # ═══════════════════════════════════════════════════════════════════════════
 # 🔧 HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -179,11 +203,41 @@ def _get_markdown_language(filename):
     
     return mapping.get(ext, '')
 
+def tag_original_files(file_list, base_directory):
+    """Adds a comment with the relative path at the top of original files."""
+    print(f"🏷️  Tagging {len(file_list)} original files with relative paths...")
+    tagged_count = 0
+    
+    for file_path in file_list:
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext not in COMMENT_MAP:
+            continue
+            
+        rel_path = os.path.relpath(file_path, base_directory)
+        comment_pattern = COMMENT_MAP[ext]
+        tag_line = comment_pattern.format(rel_path)
+        
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Evitar adicionar duplicado se o script for rodado duas vezes
+            if content.startswith(tag_line):
+                continue
+                
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(tag_line + "\n" + content)
+            tagged_count += 1
+        except Exception as e:
+            print(f"⚠️  Could not tag file {rel_path}: {e}")
+            
+    print(f"✅ Tagging complete. {tagged_count} files updated.\n")
+
 # ═══════════════════════════════════════════════════════════════════════════
 # 🚀 MAIN MERGE FUNCTION
 # ═══════════════════════════════════════════════════════════════════════════
 
-def merge_project_files(directory, output_file, config):
+def merge_project_files(directory, output_file, config, tag_files=False):
     output_filename = os.path.basename(output_file)
     script_filename = os.path.basename(__file__)
     
@@ -253,6 +307,9 @@ def merge_project_files(directory, output_file, config):
     if keywords_set and skipped_by_keywords > 0:
         print(f"   ({skipped_by_keywords} files ignored because they don't contain keywords)")
     print()
+
+    if tag_files:
+        tag_original_files(found_files, directory)
 
     # ─────────────────────────────────────────────────────────────────────
     # PHASE 2: Writing output file (MARKDOWN FORMAT)
@@ -374,7 +431,7 @@ def merge_project_files(directory, output_file, config):
                         outfile.write("\n")
                     outfile.write("```\n\n")
             except Exception as e:
-                outfile.write(f"> ❌ [ERROR READING FILE]: {e}\n\n")
+                outfile.write(f("> ❌ [ERROR READING FILE]: {e}\n\n"))
 
     print(f"✅ File generated successfully: {output_filename}")
     print(f"📊 Size: {os.path.getsize(output_file) / 1024:.2f} KB")
@@ -387,6 +444,7 @@ def parse_arguments():
     )
     parser.add_argument('-g', '--generate-config', action='store_true', help='Generate default config')
     parser.add_argument('-c', '--config', type=str, help='Path to a custom merge_config.json file')
+    parser.add_argument('-t', '--tag-files', action='store_true', help='Add relative path as comment to the top of original files')
     return parser.parse_args()
 
 
@@ -416,7 +474,7 @@ if __name__ == "__main__":
             print(f"🧹 Removing previous output file: {output_name}")
             os.remove(output_path)
         
-        merge_project_files(current_dir, output_path, config)
+        merge_project_files(current_dir, output_path, config, tag_files=args.tag_files)
         
         print("\n" + "=" * 70)
         print("✅ Process completed successfully!")

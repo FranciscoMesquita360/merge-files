@@ -1,3 +1,4 @@
+# install.sh
 #!/bin/bash
 REPO="FranciscoMesquita360/merge-files"
 BINARY_NAME="merge-linux"

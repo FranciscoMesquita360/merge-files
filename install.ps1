@@ -1,3 +1,4 @@
+# install.ps1
 $repo = "FranciscoMesquita360/merge-files"
 $binaryName = "merge-windows.exe"
 
