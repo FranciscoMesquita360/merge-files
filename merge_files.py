@@ -11,6 +11,7 @@ import os
 import sys
 import json
 import argparse
+import re
 
 # ═══════════════════════════════════════════════════════════════════════════
 # ⚙️ DEFAULT CONFIGURATION (FALLBACK)
@@ -28,6 +29,8 @@ DEFAULT_CONFIG = {
     ],
     "just_file_prefixes": [],
     "just_file_contain": [],
+    "any_file_prefixes": [],
+    "any_file_contain": [],
     "search_keywords": [],
     "included_extensions": [
         '.rs', '.ts', '.tsx', '.css', '.scss', '.json', '.toml', '.yaml', '.yml',
@@ -45,6 +48,8 @@ DEFAULT_CONFIG = {
         ],
         "just_prefixes": [],
         "just_file_contain": [],
+        "any_file_prefixes": [],
+        "any_file_contain": [],
         "included_extensions": [
               '.rs', '.ts', '.tsx', '.css', '.scss', '.json', '.toml', '.yaml', '.yml',
         '.html', '.py', '.txt', '.proto', '.lua', '.js', '.jsx', '.md', '.sql', '.sh','.ps1'
@@ -55,27 +60,54 @@ DEFAULT_CONFIG = {
 CONFIG_FILENAME = "merge_config.json"
 
 COMMENT_MAP = {
+    # Scripts & Configs
     '.py': '# {}',
-    '.rs': '// {}',
-    '.js': '// {}',
-    '.jsx': '// {}',
-    '.ts': '// {}',
-    '.tsx': '// {}',
-    '.lua': '-- {}',
-    '.sql': '-- {}',
     '.sh': '# {}',
     '.ps1': '# {}',
     '.yaml': '# {}',
     '.yml': '# {}',
     '.toml': '# {}',
-    '.css': '/* {} */',
-    '.scss': '/* {} */',
-    '.proto': '// {}',
+    '.rb': '# {}',
+    '.dockerfile': '# {}',
+    
+    # C-Style Languages
+    '.rs': '// {}',
+    '.js': '// {}',
+    '.jsx': '// {}',
+    '.ts': '// {}',
+    '.tsx': '// {}',
     '.go': '// {}',
     '.c': '// {}',
     '.cpp': '// {}',
     '.h': '// {}',
     '.java': '// {}',
+    '.kt': '// {}',
+    '.kts': '// {}',
+    '.swift': '// {}',
+    '.proto': '// {}',
+    '.php': '// {}',
+    '.dart': '// {}',
+    '.cs': '// {}',
+    '.scala': '// {}',
+    
+    # Infrastructure & Data
+    '.tf': '# {}',
+    '.tfvars': '# {}',
+    '.lua': '-- {}',
+    '.sql': '-- {}',
+    '.hs': '-- {}',
+    
+    # Styling (CSS/Sass use /* */ for safety in minifiers)
+    '.css': '/* {} */',
+    '.scss': '/* {} */',
+    '.sass': '/* {} */',
+    '.less': '/* {} */',
+    
+    # Specialized
+    '.vue': '',
+    '.html': '',
+    '.xml': '',
+    '.md': '[//]: # ({})',
 }
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -195,7 +227,13 @@ def _get_markdown_language(filename):
         '.xml': 'xml',
         '.proto': 'protobuf',
         '.dockerfile': 'dockerfile',
-        '.txt': 'text'
+        '.txt': 'text',
+        '.tf': 'terraform', '.tfvars': 'terraform',
+        '.kt': 'kotlin', '.kts': 'kotlin',
+        '.swift': 'swift',
+        '.dart': 'dart',
+        '.cs': 'csharp',
+        '.vue': 'vue'
     }
     # Special case for files like 'Dockerfile' with no extension
     if filename.lower() == 'dockerfile': return 'dockerfile'
@@ -203,10 +241,16 @@ def _get_markdown_language(filename):
     
     return mapping.get(ext, '')
 
+
 def tag_original_files(file_list, base_directory):
-    """Adds a comment with the relative path at the top of original files."""
-    print(f"🏷️  Tagging {len(file_list)} original files with relative paths...")
+    """
+    Adiciona ou atualiza um comentário com o caminho relativo no topo dos arquivos.
+    - Ignora arquivos com Shebang (#!).
+    - Substitui tags antigas se o arquivo foi renomeado.
+    """
+    print(f"🏷️  Tagging/Updating {len(file_list)} original files...")
     tagged_count = 0
+    ignored_shebang = 0
     
     for file_path in file_list:
         ext = os.path.splitext(file_path)[1].lower()
@@ -214,24 +258,52 @@ def tag_original_files(file_list, base_directory):
             continue
             
         rel_path = os.path.relpath(file_path, base_directory)
-        comment_pattern = COMMENT_MAP[ext]
-        tag_line = comment_pattern.format(rel_path)
+        comment_template = COMMENT_MAP[ext]
+        
+        # Cria um Regex para detectar se a primeira linha já é uma tag (independente do caminho)
+        # Ex: se o template é "// {}", o regex vira "^// .*"
+        regex_tag_pattern = "^" + re.escape(comment_template).replace(r'\{\}', r'.*') + "$"
+        tag_line = comment_template.format(rel_path)
         
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+                content_lines = f.readlines()
             
-            # Evitar adicionar duplicado se o script for rodado duas vezes
-            if content.startswith(tag_line):
+            if not content_lines:
                 continue
-                
+
+            first_line = content_lines[0].strip()
+
+            # 1. Ignorar se houver Shebang
+            if first_line.startswith("#!"):
+                ignored_shebang += 1
+                continue
+
+            # 2. Verificar se a primeira linha já é uma tag deste script
+            is_old_tag = re.match(regex_tag_pattern, first_line)
+            
+            if is_old_tag:
+                # Se a tag já está correta, não faz nada
+                if first_line == tag_line:
+                    continue
+                # Se a tag existe mas o caminho mudou, removemos a linha antiga
+                remaining_content = "".join(content_lines[1:])
+            else:
+                # Se não tem tag, preservamos o arquivo todo
+                remaining_content = "".join(content_lines)
+
+            # Escrever a nova tag e o conteúdo
             with open(file_path, 'w', encoding='utf-8') as f:
-                f.write(tag_line + "\n" + content)
+                f.write(tag_line + "\n" + remaining_content)
+            
             tagged_count += 1
+            
         except Exception as e:
             print(f"⚠️  Could not tag file {rel_path}: {e}")
             
-    print(f"✅ Tagging complete. {tagged_count} files updated.\n")
+    if ignored_shebang > 0:
+        print(f"ℹ️  Ignored {ignored_shebang} files with Shebang (#!).")
+    print(f"✅ Tagging complete. {tagged_count} files updated/corrected.\n")
 
 # ═══════════════════════════════════════════════════════════════════════════
 # 🚀 MAIN MERGE FUNCTION
@@ -250,6 +322,8 @@ def merge_project_files(directory, output_file, config, tag_files=False):
     excluded_prefixes = _ensure_tuple(config.get('excluded_file_prefixes'))
     just_prefixes_set = _parse_prefixes(config.get('just_file_prefixes'))
     just_contain_set = _parse_prefixes(config.get('just_file_contain'))
+    any_prefixes_set = _parse_prefixes(config.get('any_file_prefixes'))
+    any_contain_set = _parse_prefixes(config.get('any_file_contain'))
     keywords_set = _parse_prefixes(config.get('search_keywords'))
     included_extensions = _ensure_tuple(config.get('included_extensions'))
     proj_desc = config.get('project_description', '')
@@ -291,8 +365,28 @@ def merge_project_files(directory, output_file, config, tag_files=False):
             # Normal Filters
             if file.startswith(excluded_prefixes): continue
             if not file.endswith(included_extensions): continue
-            if just_prefixes_set and not any(file.startswith(prefix) for prefix in just_prefixes_set): continue
-            if just_contain_set and not any(sub.lower() in file.lower() for sub in just_contain_set): continue
+            
+            # Logic for JUST filters (High Priority)
+            if (just_prefixes_set or just_contain_set):
+                match_just = False
+                if just_prefixes_set and any(file.startswith(prefix) for prefix in just_prefixes_set):
+                    match_just = True
+                if just_contain_set and any(sub.lower() in file.lower() for sub in just_contain_set):
+                    match_just = True
+                
+                if not match_just:
+                    continue
+            
+            # Logic for ANY filters (Lower Priority)
+            elif (any_prefixes_set or any_contain_set):
+                match_any = False
+                if any_prefixes_set and any(file.startswith(prefix) for prefix in any_prefixes_set):
+                    match_any = True
+                if any_contain_set and any(sub.lower() in file.lower() for sub in any_contain_set):
+                    match_any = True
+                
+                if not match_any:
+                    continue
             
             if keywords_set:
                 if not _file_contains_keywords(full_path, keywords_set):
@@ -336,6 +430,8 @@ def merge_project_files(directory, output_file, config, tag_files=False):
         excl_prefixes_tree = _ensure_tuple(tree_conf.get('excluded_prefixes'))
         just_prefixes_tree = _parse_prefixes(tree_conf.get('just_prefixes'))
         just_contain_tree = _parse_prefixes(tree_conf.get('just_file_contain'))
+        any_prefixes_tree = _parse_prefixes(tree_conf.get('any_file_prefixes'))
+        any_contain_tree = _parse_prefixes(tree_conf.get('any_file_contain'))
         incl_ext_tree = _ensure_tuple(tree_conf.get('included_extensions'))
 
         for root, dirs, files in os.walk(directory, topdown=True):
@@ -357,9 +453,24 @@ def merge_project_files(directory, output_file, config, tag_files=False):
                 
                 if file.startswith(excl_prefixes_tree): continue
                 if incl_ext_tree and not file.endswith(incl_ext_tree): continue
-                if just_prefixes_tree and not any(file.startswith(prefix) for prefix in just_prefixes_tree): continue
-                if just_contain_tree and not any(sub.lower() in file.lower() for sub in just_contain_tree): continue
                 
+                # Tree Filter Logic (Matching main merge logic)
+                if (just_prefixes_tree or just_contain_tree):
+                    match_just = False
+                    if just_prefixes_tree and any(file.startswith(prefix) for prefix in just_prefixes_tree):
+                        match_just = True
+                    if just_contain_tree and any(sub.lower() in file.lower() for sub in just_contain_tree):
+                        match_just = True
+                    if not match_just: continue
+                
+                elif (any_prefixes_tree or any_contain_tree):
+                    match_any = False
+                    if any_prefixes_tree and any(file.startswith(prefix) for prefix in any_prefixes_tree):
+                        match_any = True
+                    if any_contain_tree and any(sub.lower() in file.lower() for sub in any_contain_tree):
+                        match_any = True
+                    if not match_any: continue
+
                 current_node[file] = None
                 
                 if keywords_set:
@@ -389,9 +500,7 @@ def merge_project_files(directory, output_file, config, tag_files=False):
                     
                     outfile.write(f"{prefix}{connector}{key}{marker}\n")
                 else:
-                    # Only print directory if it's not empty after filters or if we don't care
-                    # For simplicity, we print it, but we can recurse
-                    if node[key] == {} and (just_prefixes_tree or just_contain_tree):
+                    if node[key] == {} and (just_prefixes_tree or just_contain_tree or any_prefixes_tree or any_contain_tree):
                         # Skip empty folders when filtering files
                         continue
                         

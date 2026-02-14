@@ -29,6 +29,8 @@
     ],
     "just_file_prefixes": [],
     "just_file_contain": [],
+    "any_file_prefixes": [],
+    "any_file_contain": [],
     "search_keywords": [],
     "included_extensions": [
         ".rs",
@@ -78,6 +80,8 @@
         ],
         "just_prefixes": [],
         "just_file_contain": [],
+        "any_file_prefixes": [],
+        "any_file_contain": [],
         "included_extensions": [
             ".rs",
             ".ts",
