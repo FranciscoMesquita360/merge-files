@@ -80,17 +80,23 @@ def generate_config_file(output_path=None):
         print(f"❌ Error generating configuration file: {e}")
         return False
 
-def load_configuration(current_dir):
+def load_configuration(current_dir, custom_config_path=None):
     """Loads config from JSON or returns default."""
-    config_path = os.path.join(current_dir, CONFIG_FILENAME)
+    if custom_config_path:
+        config_path = custom_config_path
+    else:
+        config_path = os.path.join(current_dir, CONFIG_FILENAME)
     
     if not os.path.exists(config_path):
+        if custom_config_path:
+            print(f"❌ Custom config file '{custom_config_path}' not found!")
+            sys.exit(1)
         print(f"⚠️  File '{CONFIG_FILENAME}' not found. Using default script settings.")
         return DEFAULT_CONFIG
     
     try:
         with open(config_path, 'r', encoding='utf-8') as f:
-            print(f"📄 Loading configuration from: {CONFIG_FILENAME}")
+            print(f"📄 Loading configuration from: {config_path}")
             user_config = json.load(f)
             
             final_config = DEFAULT_CONFIG.copy()
@@ -102,7 +108,7 @@ def load_configuration(current_dir):
                 
             return final_config
     except Exception as e:
-        print(f"❌ Error reading '{CONFIG_FILENAME}': {e}")
+        print(f"❌ Error reading '{config_path}': {e}")
         print("⚠️  Using default settings.")
         return DEFAULT_CONFIG
 
@@ -380,6 +386,7 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument('-g', '--generate-config', action='store_true', help='Generate default config')
+    parser.add_argument('-c', '--config', type=str, help='Path to a custom merge_config.json file')
     return parser.parse_args()
 
 
@@ -403,7 +410,7 @@ if __name__ == "__main__":
         print("🔗 MERGE PROJECT FILES")
         print("=" * 70 + "\n")
 
-        config = load_configuration(current_dir)
+        config = load_configuration(current_dir, args.config)
 
         if os.path.exists(output_path):
             print(f"🧹 Removing previous output file: {output_name}")
