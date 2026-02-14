@@ -47,9 +47,9 @@ merge
 
 ## 📖 Command Line Options
 
-```bash
-merge                       # Run with current/default settings
-merge --generate-config     # Generate merge_config.json template
+| Option | Short | Description |
+|--------|-------|-------------|
+| --generate-config | -g | Generate merge_config.json template
 merge -g                    # Short form for config generation
 merge --help                # Show help message
 ```
