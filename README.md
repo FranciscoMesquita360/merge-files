@@ -234,7 +234,7 @@ my-project/
 ```
 
 ### 4. **File Contents** (with syntax highlighting)
-```markdown
+``````markdown
 ## File: `src/main.rs`
 
 > 🔐 Sanitized: Database URLs (1x), API Keys (2x)
@@ -245,7 +245,7 @@ fn main() {
     println!("Server starting...");
 }
 ```
-```
+``````
 
 ---
 
