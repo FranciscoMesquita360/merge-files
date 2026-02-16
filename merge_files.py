@@ -20,12 +20,31 @@ import re
 DEFAULT_CONFIG = {
     "mandatory_dirs": [],
     "excluded_dirs": [
-        'target', 'target-app', '.git', '.vscode', '__pycache__', 
-        'node_modules', 'build', '.venv', 'windows-schema', 'gen', 'dist', 'coverage'
+        "target",
+        "target-app",
+        ".git",
+        ".vscode",
+        "__pycache__",
+        "node_modules",
+        "build",
+        ".venv",
+        "windows-schema",
+        "gen",
+        "dist",
+        "coverage"
     ],
     "excluded_file_prefixes": [
-     'merged_output','Cargo.lock', 'package-lock', 'yarn.lock', 'pnpm-lock', 
-        'data', 'mock_bundle_registry', '.git', '.DS_Store','readme','README'
+        "merged_output",
+        "Cargo.lock",
+        "package-lock",
+        "yarn.lock",
+        "pnpm-lock",
+        "data",
+        "mock_bundle_registry",
+        ".git",
+        ".DS_Store",
+        "readme",
+        "README"
     ],
     "just_file_prefixes": [],
     "just_file_contain": [],
@@ -33,26 +52,238 @@ DEFAULT_CONFIG = {
     "any_file_contain": [],
     "search_keywords": [],
     "included_extensions": [
-        '.rs', '.ts', '.tsx', '.css', '.scss', '.json', '.toml', '.yaml', '.yml',
-        '.html', '.py', '.txt', '.proto', '.lua', '.js', '.jsx','.sql', '.sh','.ps1'
+        ".rs",
+        ".ts",
+        ".tsx",
+        ".css",
+        ".scss",
+        ".json",
+        ".toml",
+        ".yaml",
+        ".yml",
+        ".html",
+        ".py",
+        ".txt",
+        ".proto",
+        ".lua",
+        ".js",
+        ".jsx",
+        ".sql",
+        ".sh",
+        ".ps1"
     ],
     "project_description": "Default project description",
+    "sanitize_secrets": {
+        "enabled": True,
+        "patterns": [
+            {
+                "name": "API Keys (generic)",
+                "regex": "(api[_-]?key|apikey|api[_-]?secret)\\s*[:=]\\s*['\"]([^'\"]{8,})['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "Tokens & Bearer",
+                "regex": "(token|bearer|jwt|auth[_-]?token|access[_-]?token)\\s*[:=]\\s*['\"]([^'\"]{8,})['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "Passwords",
+                "regex": "(password|passwd|pwd|secret|pass)\\s*[:=]\\s*['\"]([^'\"]+)['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "AWS Keys",
+                "regex": "(aws[_-]?access[_-]?key[_-]?id|aws[_-]?secret[_-]?access[_-]?key)\\s*[:=]\\s*['\"]([^'\"]+)['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "Database URLs with credentials",
+                "regex": "(mongodb|postgres|mysql|redis|mariadb)://([^:]+):([^@]+)@",
+                "replacement": "\\1://USERNAME:********@"
+            },
+            {
+                "name": "Connection Strings",
+                "regex": "(connection[_-]?string|database[_-]?url|db[_-]?url)\\s*[:=]\\s*['\"]([^'\"]+)['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "Private Keys",
+                "regex": "-----BEGIN[\\s\\S]*?PRIVATE KEY-----[\\s\\S]*?-----END[\\s\\S]*?PRIVATE KEY-----",
+                "replacement": "-----BEGIN PRIVATE KEY-----\\n[REDACTED]\\n-----END PRIVATE KEY-----"
+            },
+            {
+                "name": "GitHub Tokens",
+                "regex": "(ghp|gho|ghu|ghs|ghr)_[a-zA-Z0-9]{36,}",
+                "replacement": "gh*_********"
+            },
+            {
+                "name": "Stripe Keys",
+                "regex": "(sk|pk)_(test|live)_[a-zA-Z0-9]{24,}",
+                "replacement": "\\1_\\2_********"
+            },
+            {
+                "name": "OpenAI API Keys",
+                "regex": "sk-[a-zA-Z0-9]{48,}",
+                "replacement": "sk-********"
+            },
+            {
+                "name": "Generic Secrets in ENV format",
+                "regex": "^([A-Z_]+_(?:SECRET|KEY|TOKEN|PASSWORD|PASS))\\s*=\\s*(.+)$",
+                "replacement": "\\1=********"
+            },
+            {
+                "name": "JWT Tokens",
+                "regex": "eyJ[a-zA-Z0-9_-]{10,}\\.[a-zA-Z0-9_-]{10,}\\.[a-zA-Z0-9_-]{10,}",
+                "replacement": "eyJ******.*******.******"
+            },
+            {
+                "name": "URLs with Basic Auth",
+                "regex": "https?://([^:]+):([^@]+)@",
+                "replacement": "https://USERNAME:********@"
+            },
+            {
+                "name": "Kafka SASL Username",
+                "regex": "(['\"]sasl\\.username['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Kafka SASL Password",
+                "regex": "(['\"]sasl\\.password['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Generic username in dict",
+                "regex": "(['\"]username['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Generic password in dict",
+                "regex": "(['\"]password['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Token assignments (short tokens)",
+                "regex": "(token_?\\s*=\\s*[\\(\\'\"])([a-zA-Z0-9]{8,})([\\)\\'\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "RabbitMQ credentials",
+                "regex": "(['\"](?:username|password)['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "MQTT credentials",
+                "regex": "(['\"](?:username|password)['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "HTTP Auth tuples",
+                "regex": "http_auth[\\s]*=[\\s]*\\([\\s]*['\"]([^'\"]+)['\"][\\s]*,[\\s]*['\"]([^'\"]+)['\"][\\s]*\\)",
+                "replacement": "http_auth = ('USERNAME', '********')"
+            },
+            {
+                "name": "Auth Provider tuples",
+                "regex": "auth_provider[\\s]*=[\\s]*\\([\\s]*['\"]([^'\"]+)['\"][\\s]*,[\\s]*['\"]([^'\"]+)['\"][\\s]*\\)",
+                "replacement": "auth_provider = ('USERNAME', '********')"
+            },
+            {
+                "name": "Client Secret in dict",
+                "regex": "(['\"]client_secret['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "User field in dict",
+                "regex": "(['\"]user['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Commented credentials (still visible)",
+                "regex": "#\\s*(sasl\\.(username|password)|password|api[_-]?key)\\s*[=:]\\s*['\"]([^'\"]+)['\"]",
+                "replacement": "# \\1 = '********'"
+            }
+        ],
+        "custom_keywords": [
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "STRIPE_SECRET_KEY",
+            "STRIPE_PUBLISHABLE_KEY",
+            "DATABASE_PASSWORD",
+            "DB_PASSWORD",
+            "POSTGRES_PASSWORD",
+            "MYSQL_PASSWORD",
+            "REDIS_PASSWORD",
+            "JWT_SECRET",
+            "SESSION_SECRET",
+            "ENCRYPTION_KEY",
+            "PRIVATE_KEY",
+            "CLIENT_SECRET",
+            "MASTER_KEY",
+            "ADMIN_PASSWORD",
+            "KAFKA_USERNAME",
+            "KAFKA_PASSWORD",
+            "SASL_USERNAME",
+            "SASL_PASSWORD",
+            "RABBITMQ_USER",
+            "RABBITMQ_PASS",
+            "MQTT_USERNAME",
+            "MQTT_PASSWORD",
+            "ELASTIC_USER",
+            "ELASTIC_PASSWORD",
+            "INFLUX_USER",
+            "INFLUX_PASSWORD",
+            "CASSANDRA_USER",
+            "CASSANDRA_PASSWORD"
+        ]
+    },
     "tree_settings": {
         "excluded_dirs": [
-            'target', '.git', '.vscode', '__pycache__', 
-            'node_modules', 'build', '.venv', 'windows-schema', 'gen', 'icons', 'data'
+            "target",
+            ".git",
+            ".vscode",
+            "__pycache__",
+            "node_modules",
+            "build",
+            ".venv",
+            "windows-schema",
+            "gen",
+            "icons",
+            "data"
         ],
         "excluded_prefixes": [
-            'gitignore', 'package-lock', 'merge_files', 'merged_output',
-            'README', 'tauri_studio_structure', 'Cargo.lock', '.git'
+            "gitignore",
+            "package-lock",
+            "merge_files",
+            "merged_output",
+            "README",
+            "tauri_studio_structure",
+            "Cargo.lock",
+            ".git"
         ],
         "just_prefixes": [],
         "just_file_contain": [],
         "any_file_prefixes": [],
         "any_file_contain": [],
         "included_extensions": [
-              '.rs', '.ts', '.tsx', '.css', '.scss', '.json', '.toml', '.yaml', '.yml',
-        '.html', '.py', '.txt', '.proto', '.lua', '.js', '.jsx', '.md', '.sql', '.sh','.ps1'
+            ".rs",
+            ".ts",
+            ".tsx",
+            ".css",
+            ".scss",
+            ".json",
+            ".toml",
+            ".yaml",
+            ".yml",
+            ".html",
+            ".py",
+            ".txt",
+            ".proto",
+            ".lua",
+            ".js",
+            ".jsx",
+            ".md",
+            ".sql",
+            ".sh",
+            ".ps1"
         ]
     }
 }
@@ -114,6 +345,44 @@ COMMENT_MAP = {
 # 🔧 HELPER FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════
 
+def sanitize_content(content, sanitize_config, file_path=""):
+    """
+    🔐 Remove sensitive information from content.
+    Returns: (sanitized_content, list_of_replacements_made)
+    """
+    if not sanitize_config.get('enabled', False):
+        return content, []
+    
+    sanitized = content
+    replacements_made = []
+    
+    # 1. Apply regex patterns
+    for pattern_config in sanitize_config.get('patterns', []):
+        try:
+            pattern = pattern_config['regex']
+            replacement = pattern_config['replacement']
+            name = pattern_config.get('name', 'Unknown pattern')
+            
+            # Count matches before replacement
+            matches = re.findall(pattern, sanitized, re.IGNORECASE | re.MULTILINE)
+            if matches:
+                sanitized = re.sub(pattern, replacement, sanitized, flags=re.IGNORECASE | re.MULTILINE)
+                count = len(matches) if isinstance(matches[0], str) else len(matches)
+                replacements_made.append(f"{name} ({count}x)")
+        except re.error as e:
+            print(f"⚠️  Invalid regex in pattern '{pattern_config.get('name')}': {e}")
+            continue
+    
+    # 2. Apply custom keywords (simple value replacement)
+    for keyword in sanitize_config.get('custom_keywords', []):
+        pattern = f'({re.escape(keyword)})\\s*[:=]\\s*["\']([^"\']+)["\']'
+        matches = re.findall(pattern, sanitized, re.IGNORECASE)
+        if matches:
+            sanitized = re.sub(pattern, r'\1 = "********"', sanitized, flags=re.IGNORECASE)
+            replacements_made.append(f"Keyword '{keyword}'")
+    
+    return sanitized, replacements_made
+
 def generate_config_file(output_path=None):
     """Generates a merge_config.json file with default settings."""
     if output_path is None:
@@ -131,6 +400,7 @@ def generate_config_file(output_path=None):
         
         print(f"✅ Configuration file generated successfully: {CONFIG_FILENAME}")
         print(f"📝 Edit this file to customize your merge settings.")
+        print(f"🔐 Secret sanitization is ENABLED by default for security.")
         return True
     except Exception as e:
         print(f"❌ Error generating configuration file: {e}")
@@ -161,6 +431,23 @@ def load_configuration(current_dir, custom_config_path=None):
             if 'tree_settings' in user_config:
                 final_config['tree_settings'] = DEFAULT_CONFIG['tree_settings'].copy()
                 final_config['tree_settings'].update(user_config['tree_settings'])
+            
+            # Merge sanitize_secrets to preserve default patterns
+            if 'sanitize_secrets' in user_config:
+                default_sanitize = DEFAULT_CONFIG['sanitize_secrets'].copy()
+                user_sanitize = user_config['sanitize_secrets']
+                
+                if 'enabled' in user_sanitize:
+                    default_sanitize['enabled'] = user_sanitize['enabled']
+                
+                if 'patterns' in user_sanitize:
+                    default_sanitize['patterns'].extend(user_sanitize['patterns'])
+                
+                if 'custom_keywords' in user_sanitize:
+                    default_sanitize['custom_keywords'].extend(user_sanitize['custom_keywords'])
+                    default_sanitize['custom_keywords'] = list(set(default_sanitize['custom_keywords']))
+                
+                final_config['sanitize_secrets'] = default_sanitize
                 
             return final_config
     except Exception as e:
@@ -327,8 +614,16 @@ def merge_project_files(directory, output_file, config, tag_files=False):
     keywords_set = _parse_prefixes(config.get('search_keywords'))
     included_extensions = _ensure_tuple(config.get('included_extensions'))
     proj_desc = config.get('project_description', '')
+    sanitize_config = config.get('sanitize_secrets', {})
 
-    # ─────────────────────────────────────────────────────────────────────
+    # Show sanitization status
+    if sanitize_config.get('enabled', False):
+        print("🔐 Secret sanitization: ENABLED")
+        print(f"   - {len(sanitize_config.get('patterns', []))} regex patterns active")
+        print(f"   - {len(sanitize_config.get('custom_keywords', []))} custom keywords monitored\n")
+    else:
+        print("⚠️  Secret sanitization: DISABLED\n")
+
     # PHASE 1: Collecting files
     # ─────────────────────────────────────────────────────────────────────
     found_files = []
@@ -408,6 +703,9 @@ def merge_project_files(directory, output_file, config, tag_files=False):
     # ─────────────────────────────────────────────────────────────────────
     # PHASE 2: Writing output file (MARKDOWN FORMAT)
     # ─────────────────────────────────────────────────────────────────────
+    total_sanitized_files = 0
+    total_replacements = 0
+    
     with open(output_file, 'w', encoding='utf-8') as outfile:
         
         # 1. Project Header
@@ -516,13 +814,20 @@ def merge_project_files(directory, output_file, config, tag_files=False):
         outfile.write("```\n\n") # End text block
         outfile.write("---\n\n")
         
-        # 3. Keyword Info (if exists)
+        # 3. Security Notice
+        if sanitize_config.get('enabled', False):
+            outfile.write("> 🔐 **SECURITY NOTICE**\n")
+            outfile.write("> This document has been processed with secret sanitization.\n")
+            outfile.write("> Sensitive information (passwords, API keys, tokens) has been replaced with `********`.\n\n")
+            outfile.write("---\n\n")
+        
+        # 4. Keyword Info
         if keywords_set:
             outfile.write("> ⚠️ **KEYWORD FILTER ACTIVE**\n")
             outfile.write(f"> Searching for: `{', '.join(sorted(keywords_set))}`\n\n")
             outfile.write("---\n\n")
-
-        # 4. Files Content
+        
+        # 5. Files Content
         for file_path in found_files:
             relative_path = os.path.relpath(file_path, directory)
             filename = os.path.basename(file_path)
@@ -534,16 +839,29 @@ def merge_project_files(directory, output_file, config, tag_files=False):
                 with open(file_path, 'r', encoding='utf-8') as infile:
                     content = infile.read()
                     
+                    # 🔐 SANITIZE SECRETS
+                    sanitized_content, replacements = sanitize_content(content, sanitize_config, relative_path)
+                    
+                    if replacements:
+                        total_sanitized_files += 1
+                        total_replacements += len(replacements)
+                        outfile.write(f"> 🔐 **Sanitized**: {', '.join(replacements)}\n\n")
+                    
                     outfile.write(f"```{lang}\n")
-                    outfile.write(content)
-                    if not content.endswith('\n'):
+                    outfile.write(sanitized_content)
+                    if not sanitized_content.endswith('\n'):
                         outfile.write("\n")
                     outfile.write("```\n\n")
             except Exception as e:
-                outfile.write(f("> ❌ [ERROR READING FILE]: {e}\n\n"))
+                outfile.write(f"> ❌ [ERROR READING FILE]: {e}\n\n")
 
     print(f"✅ File generated successfully: {output_filename}")
     print(f"📊 Size: {os.path.getsize(output_file) / 1024:.2f} KB")
+    
+    if sanitize_config.get('enabled') and total_sanitized_files > 0:
+        print(f"🔐 Sanitized {total_replacements} secrets in {total_sanitized_files} files")
+    elif sanitize_config.get('enabled'):
+        print(f"🔐 No secrets detected in scanned files")
 
 
 def parse_arguments():

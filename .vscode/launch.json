@@ -1,0 +1,205 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Merge Files: Executar (Padrão)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Merge Files: Com Tag nos Arquivos",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "args": [
+                "--tag-files"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "──────────── CONFIGURAÇÃO ────────────",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Config: Gerar merge_config.json",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "args": [
+                "--generate-config"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Config: Usar Config Custom",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "args": [
+                "--config",
+                "custom_config.json"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Config: Usar Config Kafka",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "args": [
+                "--config",
+                "kafka_sanitize_config.json"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Config: Com Padrões Adicionais",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "args": [
+                "--config",
+                "additional_patterns_for_config.json"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "──────────── TESTES ────────────",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Teste: Exemplos Gerais",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/examples",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "preLaunchTask": "Copy Example Files"
+        },
+        {
+            "name": "Teste: Casos Reais (Kafka + Tokens)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/test_real_cases",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "preLaunchTask": "Setup Real Cases Test"
+        },
+        {
+            "name": "Teste: Django Settings",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/test_django",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "preLaunchTask": "Setup Django Test"
+        },
+        {
+            "name": "Teste: Todos os Exemplos",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/test_all",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "preLaunchTask": "Setup All Examples Test"
+        },
+        {
+            "name": "──────────── DEBUG ────────────",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Debug: Com Breakpoints",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "stopOnEntry": false
+        },
+        {
+            "name": "Debug: Sanitize Function Only",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/test_sanitize.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "──────────── HELP ────────────",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Help: Mostrar Ajuda",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/merge_files.py",
+            "args": [
+                "--help"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
+}

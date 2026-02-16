@@ -54,6 +54,168 @@
         ".ps1"
     ],
     "project_description": "Default project description",
+    "sanitize_secrets": {
+        "enabled": true,
+        "patterns": [
+            {
+                "name": "API Keys (generic)",
+                "regex": "(api[_-]?key|apikey|api[_-]?secret)\\s*[:=]\\s*['\"]([^'\"]{8,})['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "Tokens & Bearer",
+                "regex": "(token|bearer|jwt|auth[_-]?token|access[_-]?token)\\s*[:=]\\s*['\"]([^'\"]{8,})['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "Passwords",
+                "regex": "(password|passwd|pwd|secret|pass)\\s*[:=]\\s*['\"]([^'\"]+)['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "AWS Keys",
+                "regex": "(aws[_-]?access[_-]?key[_-]?id|aws[_-]?secret[_-]?access[_-]?key)\\s*[:=]\\s*['\"]([^'\"]+)['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "Database URLs with credentials",
+                "regex": "(mongodb|postgres|mysql|redis|mariadb)://([^:]+):([^@]+)@",
+                "replacement": "\\1://USERNAME:********@"
+            },
+            {
+                "name": "Connection Strings",
+                "regex": "(connection[_-]?string|database[_-]?url|db[_-]?url)\\s*[:=]\\s*['\"]([^'\"]+)['\"]",
+                "replacement": "\\1 = \"********\""
+            },
+            {
+                "name": "Private Keys",
+                "regex": "-----BEGIN[\\s\\S]*?PRIVATE KEY-----[\\s\\S]*?-----END[\\s\\S]*?PRIVATE KEY-----",
+                "replacement": "-----BEGIN PRIVATE KEY-----\\n[REDACTED]\\n-----END PRIVATE KEY-----"
+            },
+            {
+                "name": "GitHub Tokens",
+                "regex": "(ghp|gho|ghu|ghs|ghr)_[a-zA-Z0-9]{36,}",
+                "replacement": "gh*_********"
+            },
+            {
+                "name": "Stripe Keys",
+                "regex": "(sk|pk)_(test|live)_[a-zA-Z0-9]{24,}",
+                "replacement": "\\1_\\2_********"
+            },
+            {
+                "name": "OpenAI API Keys",
+                "regex": "sk-[a-zA-Z0-9]{48,}",
+                "replacement": "sk-********"
+            },
+            {
+                "name": "Generic Secrets in ENV format",
+                "regex": "^([A-Z_]+_(?:SECRET|KEY|TOKEN|PASSWORD|PASS))\\s*=\\s*(.+)$",
+                "replacement": "\\1=********"
+            },
+            {
+                "name": "JWT Tokens",
+                "regex": "eyJ[a-zA-Z0-9_-]{10,}\\.[a-zA-Z0-9_-]{10,}\\.[a-zA-Z0-9_-]{10,}",
+                "replacement": "eyJ******.*******.******"
+            },
+            {
+                "name": "URLs with Basic Auth",
+                "regex": "https?://([^:]+):([^@]+)@",
+                "replacement": "https://USERNAME:********@"
+            },
+            {
+                "name": "Kafka SASL Username",
+                "regex": "(['\"]sasl\\.username['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Kafka SASL Password",
+                "regex": "(['\"]sasl\\.password['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Generic username in dict",
+                "regex": "(['\"]username['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Generic password in dict",
+                "regex": "(['\"]password['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Token assignments (short tokens)",
+                "regex": "(token_?\\s*=\\s*[\\(\\'\"])([a-zA-Z0-9]{8,})([\\)\\'\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "RabbitMQ credentials",
+                "regex": "(['\"](?:username|password)['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "MQTT credentials",
+                "regex": "(['\"](?:username|password)['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "HTTP Auth tuples",
+                "regex": "http_auth[\\s]*=[\\s]*\\([\\s]*['\"]([^'\"]+)['\"][\\s]*,[\\s]*['\"]([^'\"]+)['\"][\\s]*\\)",
+                "replacement": "http_auth = ('USERNAME', '********')"
+            },
+            {
+                "name": "Auth Provider tuples",
+                "regex": "auth_provider[\\s]*=[\\s]*\\([\\s]*['\"]([^'\"]+)['\"][\\s]*,[\\s]*['\"]([^'\"]+)['\"][\\s]*\\)",
+                "replacement": "auth_provider = ('USERNAME', '********')"
+            },
+            {
+                "name": "Client Secret in dict",
+                "regex": "(['\"]client_secret['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "User field in dict",
+                "regex": "(['\"]user['\"]\\s*:\\s*['\"])([^'\"]+)(['\"])",
+                "replacement": "\\1********\\3"
+            },
+            {
+                "name": "Commented credentials (still visible)",
+                "regex": "#\\s*(sasl\\.(username|password)|password|api[_-]?key)\\s*[=:]\\s*['\"]([^'\"]+)['\"]",
+                "replacement": "# \\1 = '********'"
+            }
+        ],
+        "custom_keywords": [
+            "OPENAI_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "STRIPE_SECRET_KEY",
+            "STRIPE_PUBLISHABLE_KEY",
+            "DATABASE_PASSWORD",
+            "DB_PASSWORD",
+            "POSTGRES_PASSWORD",
+            "MYSQL_PASSWORD",
+            "REDIS_PASSWORD",
+            "JWT_SECRET",
+            "SESSION_SECRET",
+            "ENCRYPTION_KEY",
+            "PRIVATE_KEY",
+            "CLIENT_SECRET",
+            "MASTER_KEY",
+            "ADMIN_PASSWORD",
+            "KAFKA_USERNAME",
+            "KAFKA_PASSWORD",
+            "SASL_USERNAME",
+            "SASL_PASSWORD",
+            "RABBITMQ_USER",
+            "RABBITMQ_PASS",
+            "MQTT_USERNAME",
+            "MQTT_PASSWORD",
+            "ELASTIC_USER",
+            "ELASTIC_PASSWORD",
+            "INFLUX_USER",
+            "INFLUX_PASSWORD",
+            "CASSANDRA_USER",
+            "CASSANDRA_PASSWORD"
+        ]
+    },
     "tree_settings": {
         "excluded_dirs": [
             "target",
