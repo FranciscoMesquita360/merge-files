@@ -1,10 +1,11 @@
 # 🔗 Merge Files
 
-A powerful CLI tool to merge multiple project files into a single Markdown file with **built-in secret sanitization** for safe sharing with LLMs.
+A powerful CLI tool to merge multiple project files into a single Markdown file — and reconstruct them back — with **built-in secret sanitization** for safe sharing with LLMs.
 
 ## ✨ Key Features
 
 - 🔐 **Secret Sanitization**: Automatically detects and replaces 25+ types of credentials (API keys, passwords, tokens)
+- 🔓 **Unmerge**: Reverse the process — reconstruct your full project from a merged `.md` file
 - 📝 **Markdown Output**: Files wrapped in syntax-highlighted code blocks (`.rs`, `.py`, `.ts`, etc.)
 - ⚡ **One-liner Installation** for Windows, Linux, and macOS
 - 🎯 **Smart Filtering**: By extension, prefix, keywords, or priority folders
@@ -30,7 +31,7 @@ iwr https://raw.githubusercontent.com/FranciscoMesquita360/merge-files/main/inst
 
 ## 🛠️ Usage
 
-### Quick Start
+### Merge — Quick Start
 
 ```bash
 # 1. Navigate to your project
@@ -40,6 +41,25 @@ cd my-project/
 merge
 
 # Output: merged_output_my-project.md
+```
+
+### Unmerge — Reconstruct Files
+
+```bash
+# Extract all files from a merged .md back to disk
+merge unmerge merged_output_my-project.md
+
+# Extract to a specific directory
+merge unmerge merged_output_my-project.md -o ./restored
+
+# Overwrite files that already exist
+merge unmerge merged_output_my-project.md --overwrite
+
+# Preview what would happen without writing anything
+merge unmerge merged_output_my-project.md --dry-run
+
+# Verbose output (show each file action)
+merge unmerge merged_output_my-project.md -v
 ```
 
 ### Generate Custom Configuration
@@ -61,7 +81,9 @@ merge
 
 ---
 
-## 📖 Command Line Options
+## 📖 Command Reference
+
+### Merge
 
 | Command | Description |
 |---------|-------------|
@@ -69,7 +91,43 @@ merge
 | `merge -g` / `merge --generate-config` | Generate `merge_config.json` template |
 | `merge -c custom.json` | Use specific configuration file |
 | `merge -t` / `merge --tag-files` | Add source path comments to original files |
+| `merge --version` | Show current version |
 | `merge --help` | Show all available options |
+
+### Unmerge
+
+| Command | Description |
+|---------|-------------|
+| `merge unmerge <file.md>` | Reconstruct files (skip existing by default) |
+| `merge unmerge <file.md> -o <dir>` | Extract to a specific directory |
+| `merge unmerge <file.md> --overwrite` | Overwrite files that already exist |
+| `merge unmerge <file.md> --dry-run` | Preview actions without writing anything |
+| `merge unmerge <file.md> -v` | Verbose — show each file action |
+| `merge unmerge --version` | Show current version |
+| `merge unmerge --help` | Show all available options |
+
+---
+
+## 🔓 Unmerge — How It Works
+
+The unmerge command is the exact reverse of merge. It reads a `merged_output_*.md` file and recreates every file and directory listed in it.
+
+**Default behavior:** existing files are **skipped** — safe to run on a project that's already partially set up.
+
+**With `--overwrite`:** existing files are replaced with the version from the `.md`.
+
+**With `--dry-run`:** nothing is written. Use it to preview exactly what would be created or overwritten before committing.
+
+**Example workflow:**
+```bash
+# Share context with a teammate
+merge  # → merged_output_myproject.md
+
+# Teammate reconstructs the project
+merge unmerge merged_output_myproject.md -o ./myproject
+```
+
+> ⚠️ Note: files with sanitized secrets will be restored with `********` in place of the original values — that information was intentionally removed during the merge step.
 
 ---
 
@@ -105,7 +163,7 @@ stripe_key = "sk_live_********"
 
 ### Sanitization Patterns Included:
 
-- 13+ regex patterns for common credentials
+- 25+ regex patterns for common credentials
 - 30+ keyword monitors (OPENAI_API_KEY, DATABASE_PASSWORD, etc.)
 - Kafka/RabbitMQ/MQTT specific patterns
 - Even detects credentials in **commented code**!
